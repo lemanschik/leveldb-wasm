@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": false,
+    "target": "es6",
+    "module": "none",
+    "strict": true,
+    "outFile": "build/api.js",
+    "noImplicitUseStrict": true
+  },
+  "include": [
+    "src/ts/*"
+  ]
+}

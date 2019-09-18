@@ -64,9 +64,13 @@ else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstrict-prototypes")
   endif(NOT CMAKE_C_FLAGS MATCHES "-Wstrict-prototypes")
 
+  # TODO(jabolopes): I had to enable exceptions otherwise this doesn't
+  # compile. We need to try to find a way to disable exceptions and still get
+  # this to compile.
+  #
   # Disable C++ exceptions.
-  string(REGEX REPLACE "-fexceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+  # string(REGEX REPLACE "-fexceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
   # Disable RTTI.
   string(REGEX REPLACE "-frtti" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
