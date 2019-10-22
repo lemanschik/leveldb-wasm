@@ -3,7 +3,7 @@ all: build/index.html
 
 build/libleveldb.a:
 	mkdir -p build
-	cd build && emconfigure cmake -D WASM=1 ../
+	cd build && emconfigure cmake -D WASM=1 -D LEVELDB_BUILD_TESTS=OFF ../
 	cd build && emmake make -s WASM=1
 
 build/api.js: src/ts/leveldb-functions.ts
@@ -12,6 +12,7 @@ build/api.js: src/ts/leveldb-functions.ts
 build/libleveldb.js: build/libleveldb.a build/api.js src/leveldb_worker.js
 	emcc $< -o $@ \
 	-s EXPORTED_FUNCTIONS=@exported_functions.json \
+	-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'lengthBytesUTF8']" \
 	-s FORCE_FILESYSTEM=1 \
 	--post-js build/api.js \
 	--post-js src/leveldb_worker.js

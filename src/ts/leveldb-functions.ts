@@ -19,9 +19,11 @@ namespace Module {
     export declare function getValue(ptr: ptr<double>, type: "double", noSafe?: boolean): number;
 
     export declare function setValue<T extends ptr<any>>(ptr: ptr<T>, value: T, type: "*"): T;
+    export declare function setValue(ptr: ptr<i32>, value: i32, type: "i32"): i32;
 
     export declare function UTF8ToString(ptr: ptr<str>): string
     export declare function stringToUTF8(str: string, outPtr: ptr<str>, maxBytesToWrite: number): void
+    export declare function lengthBytesUTF8(str: string): number
 
     export declare function stackSave(): stack
     export declare function stackRestore(stack: stack): void
@@ -53,7 +55,7 @@ namespace Module {
         : never
 
     /* Types */
-    
+
     export interface leveldb_t { __type__: "leveldb_t" }
     export interface leveldb_cache_t { __type__: "leveldb_cache_t" }
     export interface leveldb_comparator_t { __type__: "leveldb_comparator_t" }
@@ -317,32 +319,149 @@ namespace Module {
 
     export class LevelDB {
         constructor(public readonly db: ptr<leveldb_t>) {}
+
+        put(options: LevelDBWriteOptions, key: string, value: string) {
+            leveldb_put(this, options, key, value)
+        }
+        get(options: LevelDBReadOptions, key: string) {
+            return leveldb_get(this, options, key)
+       }
     }
 
-    interface LevelDBOptions {
-        options: ptr<leveldb_options_t>;
+    export class LevelDBOptions {
+        private _createIfMissing: boolean
+
+        // TODO: destroy pointer
+        constructor(public readonly options: ptr<leveldb_options_t>) {this._createIfMissing = false}
+
+        set createIfMissing(value: boolean) {
+          const stack = stackSave();
+          Module.ccall('leveldb_options_set_create_if_missing', 'undefined', ['number', 'boolean'], [this.options, value]);
+          stackRestore(stack);
+          this._createIfMissing = value
+        }
+
+        get createIfMissing() {
+          return this._createIfMissing
+        }
     }
+
+    export class LevelDBWriteOptions {
+        constructor(public readonly options: ptr<leveldb_writeoptions_t>) {}
+    }
+
+    export class LevelDBReadOptions {
+        constructor(public readonly options: ptr<leveldb_readoptions_t>) {}
+    }
+
+    export const leveldb_options_create : () => Promise<LevelDBOptions>
+        = () => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave()
+                let optPtr = Module.ccall('leveldb_options_create', 'number', [], []);
+                stackRestore(stack)
+                resolve(new LevelDBOptions(optPtr as ptr<leveldb_options_t>));
+            });
+        }
 
     export const leveldb_open : (options: LevelDBOptions, name: string) => Promise<LevelDB>
         = (options, name) => {
             return new Promise((resolve, reject) => {
-                const stack = stackSave()
+                const stack = stackSave();
 
                 // char** errptr = NULL;
-                let ppErrptr = stackAlloc<ptr<str>>(4)
-                // setValue(ppErrptr, 0, "*");
-
+                let ppErrptr = stackAlloc<ptr<str>>(4);
+                setValue(ppErrptr, (0 as ptr<str>), "*");
                 let dbPtr = Module.ccall('leveldb_open', 'number', ['number', 'string', 'number'], [options.options, name, ppErrptr]);
+                const pErrmsg = getValue<ptr<str>>(ppErrptr, "*")
+                stackRestore(stack);
 
-                const pErrptr = getValue<ptr<str>>(ppErrptr, "*")
-                const errptr = pErrptr === 0 ? null : UTF8ToString(pErrptr)
-                leveldb_free(pErrptr)
-
-                stackRestore(stack)
-
+                const errmsg = pErrmsg === 0 ? null : UTF8ToString(pErrmsg)
+                leveldb_free(pErrmsg);
+                if(errmsg !== null) {
+                  reject(errmsg);
+                }
                 resolve(new LevelDB(dbPtr as ptr<leveldb_t>));
             });
         }
+
+    export const leveldb_writeoptions_create : () => Promise<LevelDBWriteOptions>
+        = () => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave()
+                let optPtr = Module.ccall('leveldb_writeoptions_create', 'number', [], []);
+                stackRestore(stack)
+                resolve(new LevelDBWriteOptions(optPtr as ptr<leveldb_writeoptions_t>));
+            });
+        }
+
+    export const leveldb_put : (db: LevelDB, options: LevelDBWriteOptions, key: string, value: string) => Promise<void>
+        = (db, options, key, value) => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave();
+
+                const keyLen = lengthBytesUTF8(key)+1
+                const valLen = lengthBytesUTF8(value)+1
+
+                // char** errptr = NULL;
+                let ppErrptr = stackAlloc<ptr<str>>(4);
+                setValue(ppErrptr, (0 as ptr<str>), "*");
+                Module.ccall('leveldb_put', 'undefined', ['number', 'number', 'string', 'number', 'string', 'number', 'number'], [db.db, options.options, key, keyLen, value, valLen, ppErrptr]);
+                const pErrmsg = getValue<ptr<str>>(ppErrptr, "*")
+                stackRestore(stack);
+
+                const errmsg = pErrmsg === 0 ? null : UTF8ToString(pErrmsg)
+                leveldb_free(pErrmsg);
+                if(errmsg !== null) {
+                  reject(errmsg);
+                }
+                resolve();
+            });
+        }
+
+    export const leveldb_readoptions_create : () => Promise<LevelDBReadOptions>
+        = () => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave()
+                let optPtr = Module.ccall('leveldb_readoptions_create', 'number', [], []);
+                stackRestore(stack)
+                resolve(new LevelDBReadOptions(optPtr as ptr<leveldb_readoptions_t>));
+            });
+        }
+
+    export const leveldb_get : (db: LevelDB, options: LevelDBReadOptions, key: string) => Promise<string>
+        = (db, options, key) => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave();
+
+                //TODO: does it make sense to use *utf8* length?
+                const keyLen = lengthBytesUTF8(key)+1
+
+                // char** errptr = NULL;
+                let ppErrptr = stackAlloc<ptr<str>>(4);
+                setValue(ppErrptr, (0 as ptr<str>), "*");
+
+                // NOTE: This pointer is required by the call but it is not used
+                // size_t* vallen = 0;
+                let valLenPtr = stackAlloc<i32>(4);
+                setValue(valLenPtr, (0 as i32), "i32");
+
+                let value = Module.ccall('leveldb_get', 'string', ['number', 'number', 'string', 'number', 'number', 'number'], [db.db, options.options, key, keyLen, valLenPtr, ppErrptr]);
+
+                //TODO: free the pointer
+                const pErrmsg = getValue<ptr<str>>(ppErrptr, "*")
+                stackRestore(stack);
+
+                const errmsg = pErrmsg === 0 ? null : UTF8ToString(pErrmsg)
+                leveldb_free(pErrmsg);
+                if(errmsg !== null) {
+                  reject(errmsg);
+                }
+
+                resolve(value);
+            });
+        }
+
 
     export const leveldb_free : (db: ptr<any>) => void
         = (db) => {
