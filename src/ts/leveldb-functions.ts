@@ -331,7 +331,7 @@ namespace Module {
     export class LevelDBOptions {
         private _createIfMissing: boolean
 
-        // TODO: destroy pointer
+        //TODO: destroy pointer
         constructor(public readonly options: ptr<leveldb_options_t>) {this._createIfMissing = false}
 
         set createIfMissing(value: boolean) {
@@ -347,7 +347,22 @@ namespace Module {
     }
 
     export class LevelDBWriteOptions {
-        constructor(public readonly options: ptr<leveldb_writeoptions_t>) {}
+        private _sync: boolean;
+
+        //TODO: destroy pointer
+        constructor(public readonly options: ptr<leveldb_writeoptions_t>) {this._sync = false;}
+
+        set sync(value: boolean) {
+          const stack = stackSave();
+          Module.ccall('leveldb_writeoptions_set_sync', 'undefined', ['number', 'boolean'], [this.options, value]);
+          stackRestore(stack);
+          this._sync = value;
+        }
+
+        get sync() {
+          return this._sync;
+        }
+
     }
 
     export class LevelDBReadOptions {
@@ -382,6 +397,16 @@ namespace Module {
                   reject(errmsg);
                 }
                 resolve(new LevelDB(dbPtr as ptr<leveldb_t>));
+            });
+        }
+
+    export const leveldb_close : (db: LevelDB) => Promise<void>
+        = (db) => {
+            return new Promise((resolve, reject) => {
+                const stack = stackSave();
+                Module.ccall('leveldb_close', 'undefined', ['number'], [db.db]);
+                stackRestore(stack);
+                resolve();
             });
         }
 

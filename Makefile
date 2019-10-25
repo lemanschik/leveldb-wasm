@@ -15,7 +15,8 @@ build/libleveldb.js: build/libleveldb.a build/api.js src/leveldb_worker.js
 	-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'lengthBytesUTF8']" \
 	-s FORCE_FILESYSTEM=1 \
 	--post-js build/api.js \
-	--post-js src/leveldb_worker.js
+	--post-js src/leveldb_worker.js \
+	--post-js src/benchmark.js
 
 build/leveldb_client.js: src/leveldb_client.js build/libleveldb.js
 	cp $< $@
