@@ -82,7 +82,7 @@ Module.onRuntimeInitialized = function() {
   FS.mkdir('/chrome');
   FS.mount(CHROMEFS, { root: '.' }, '/chrome');
 
-  if(enableIOFS) {
+  if (enableIOFS) {
     FS.mkdir('/io');
     FS.mount(IOFS, { root: '.' }, '/io');
   }
