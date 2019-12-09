@@ -43,6 +43,20 @@ async function many_ro(db) {
   }
 }
 
+async function runBenchmarkChromeFS() {
+  console.log('Running ChromeFS LevelDB benchmark');
+  db1 = await openLevelDBForBenchmark('/chrome/test1.db')
+  db2 = await openLevelDBForBenchmark('/chrome/test2.db')
+
+  await measure(async () => {
+    await many_wo(db1);
+    await many_ro(db1)
+    await many_rw(db2);
+  });
+
+  console.log(IOFS.profileData)
+}
+
 async function runBenchmarkIOFS() {
   console.log('Running IOFS LevelDB benchmark');
   db1 = await openLevelDBForBenchmark('/io/test1.db')
