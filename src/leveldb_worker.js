@@ -1,10 +1,50 @@
 // Switch to false if your browser doesn't support IOFS
-var enableIOFS = true;
+var enableIOFS = false;
+
+// Switch to false if your browser doesn't support NativeIOFS
+var enableNativeIOFS = true;
+
+// Switch to false if your setup doesn't support Asyncify and AsyncFS.
+var enableAsyncIOFS = false;
+
+function leveldbOptionsCreate() {
+  var result = Module.leveldb_options_create();
+  return Promise.resolve(result);
+}
+
+function leveldbReadOptionsCreate() {
+  var result = Module.leveldb_readoptions_create();
+  return Promise.resolve(result);
+}
+
+function leveldbWriteOptionsCreate() {
+  var result = Module.leveldb_writeoptions_create();
+  return Promise.resolve(result);
+}
+
+function leveldbOpen(options, name) {
+  var result = Module.leveldb_open(options, name);
+  return Promise.resolve(result);
+}
+
+function leveldbClose(database) {
+  Module.leveldb_close(database);
+}
 
 function handler(port, data) {
   switch (data.command) {
     case 'leveldbOptionsCreate':
       leveldbOptionsCreate()
+        .then(connection => port.postMessage({connection: connection}))
+        .catch(err => port.postMessage({error: err}));
+      break;
+    case 'leveldbReadOptionsCreate':
+      leveldbReadOptionsCreate()
+        .then(connection => port.postMessage({connection: connection}))
+        .catch(err => port.postMessage({error: err}));
+      break;
+    case 'leveldbWriteOptionsCreate':
+      leveldbWriteOptionsCreate()
         .then(connection => port.postMessage({connection: connection}))
         .catch(err => port.postMessage({error: err}));
       break;
@@ -45,21 +85,6 @@ function handlerInitialized(port, data) {
   }
 }
 
-function leveldbOptionsCreate() {
-  var result = Module.leveldb_options_create();
-  return Promise.resolve(result);
-}
-
-function leveldbWriteOptionsCreate() {
-  var result = Module.leveldb_writeoptions_create();
-  return Promise.resolve(result);
-}
-
-function leveldbOpen(options, name) {
-  var result = Module.leveldb_open(options, name);
-  return Promise.resolve(result);
-}
-
 // Channel for Web worker.
 onmessage = function(event) {
   handlerInitialized(event.ports[0], event.data);
@@ -85,6 +110,16 @@ Module.onRuntimeInitialized = function() {
   if (enableIOFS) {
     FS.mkdir('/io');
     FS.mount(IOFS, { root: '.' }, '/io');
+  }
+
+  if (enableNativeIOFS) {
+    FS.mkdir('/nativeio');
+    FS.mount(NATIVEIOFS, { root: '.' }, '/nativeio');
+  }
+
+  if (enableAsyncIOFS) {
+    FS.mkdir('/async_io');
+    FS.mount(AsyncFSImpl, { root: '.' }, '/async_io');
   }
 
   var callbacks = closures;
