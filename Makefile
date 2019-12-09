@@ -9,15 +9,16 @@ build/libleveldb.a:
 build/api.js: src/ts/leveldb-functions.ts
 	tsc
 
-build/libleveldb.js: build/libleveldb.a build/api.js src/leveldb_worker.js ../emfs/library_chromefs.js ../emfs/library_iofs.js
+build/libleveldb.js: build/libleveldb.a build/api.js src/leveldb_worker.js src/benchmark.js ../emfs/library_chromefs.js ../emfs/library_iofs.js ../emfs/library_nativeiofs.js
 	emcc $< -o $@ \
 	-s EXPORTED_FUNCTIONS=@exported_functions.json \
 	-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'lengthBytesUTF8']" \
 	-s FORCE_FILESYSTEM=1 \
-	-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='["$$CHROMEFS", "$$IOFS"]' \
+	-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='["$$CHROMEFS", "$$IOFS", "$$NATIVEIOFS"]' \
 	-lnodefs.js \
 	--js-library ../emfs/library_chromefs.js \
 	--js-library ../emfs/library_iofs.js \
+	--js-library ../emfs/library_nativeiofs.js \
 	--post-js build/api.js \
 	--post-js src/leveldb_worker.js \
 	--post-js src/benchmark.js

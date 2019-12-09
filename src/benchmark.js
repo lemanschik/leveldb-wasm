@@ -8,7 +8,7 @@ async function measure(fn) {
 async function openLevelDBForBenchmark(path) {
   op = await leveldbOptionsCreate();
   op.createIfMissing = true;
-  return  await leveldbOpen(op, path);
+  return await leveldbOpen(op, path);
 }
 
 var runs = 1000;
@@ -43,7 +43,7 @@ async function many_ro(db) {
   }
 }
 
-async function runBenchmark() {
+async function runBenchmarkIOFS() {
   console.log('Running IOFS LevelDB benchmark');
   db1 = await openLevelDBForBenchmark('/io/test1.db')
   db2 = await openLevelDBForBenchmark('/io/test2.db')
@@ -55,4 +55,21 @@ async function runBenchmark() {
   });
 
   console.log(IOFS.profileData)
+}
+
+async function runBenchmarkNativeIOFS() {
+  console.log('Running NativeIOFS LevelDB benchmark');
+  db1 = await openLevelDBForBenchmark('/nativeio/test1.db')
+  db2 = await openLevelDBForBenchmark('/nativeio/test2.db')
+
+  await measure(async () => {
+    await many_wo(db1);
+    await many_ro(db1)
+    await many_rw(db2);
+  });
+
+  leveldbClose(db1);
+  leveldbClose(db2);
+
+  console.log(NATIVEIOFS.profileData)
 }
