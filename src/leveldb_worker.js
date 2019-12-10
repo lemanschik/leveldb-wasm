@@ -8,27 +8,23 @@ var enableNativeIOFS = true;
 var enableAsyncIOFS = false;
 
 function leveldbOptionsCreate() {
-  var result = Module.leveldb_options_create();
-  return Promise.resolve(result);
+  return Module.leveldb_options_create();
 }
 
 function leveldbReadOptionsCreate() {
-  var result = Module.leveldb_readoptions_create();
-  return Promise.resolve(result);
+  return Module.leveldb_readoptions_create();
 }
 
 function leveldbWriteOptionsCreate() {
-  var result = Module.leveldb_writeoptions_create();
-  return Promise.resolve(result);
+  return Module.leveldb_writeoptions_create();
 }
 
 function leveldbOpen(options, name) {
-  var result = Module.leveldb_open(options, name);
-  return Promise.resolve(result);
+  return Module.leveldb_open(options, name);
 }
 
 function leveldbClose(database) {
-  Module.leveldb_close(database);
+  return Module.leveldb_close(database);
 }
 
 function handler(port, data) {
