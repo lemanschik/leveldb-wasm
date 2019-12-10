@@ -44,6 +44,14 @@ async function many_ro(db) {
 }
 
 async function runBenchmarkChromeFS() {
+  try {
+    VFS.root.getDirectory('test1.db', {}).removeRecursively();
+  } catch (e) {}
+
+  try {
+    VFS.root.getDirectory('test2.db', {}).removeRecursively();
+  } catch (e) {}
+
   console.log('Running ChromeFS LevelDB benchmark');
   db1 = await openLevelDBForBenchmark('/chrome/test1.db')
   db2 = await openLevelDBForBenchmark('/chrome/test2.db')
