@@ -54,7 +54,7 @@ async function runBenchmarkChromeFS() {
     await many_rw(db2);
   });
 
-  console.log(IOFS.profileData)
+  console.log(CHROMEFS.profileData)
 }
 
 async function runBenchmarkIOFS() {
