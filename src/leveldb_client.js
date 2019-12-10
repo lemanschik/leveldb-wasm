@@ -1,3 +1,5 @@
+console.log('LevelDB client');
+
 var worker = null;
 
 function leveldb_init() {
