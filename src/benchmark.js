@@ -8,7 +8,7 @@ async function measure(fn) {
 async function openLevelDBForBenchmark(path) {
   op = await leveldbOptionsCreate();
   op.createIfMissing = true;
-  return await leveldbOpen(op, path);
+  return leveldbOpen(op, path);
 }
 
 var runs = 1000;
@@ -82,8 +82,8 @@ async function runBenchmarkNativeIOFS() {
     await many_rw(db2);
   });
 
-  leveldbClose(db1);
-  leveldbClose(db2);
+  await leveldbClose(db1);
+  await leveldbClose(db2);
 
   console.log(NATIVEIOFS.profileData)
 }
