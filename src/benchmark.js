@@ -20,8 +20,11 @@ async function many_rw(db) {
   go = await leveldbReadOptionsCreate();
 
   for (var i = 0; i < n; ++i) {
-    await db.put(po, i.toString(),i.toString());
-    await db.get(go, i.toString());
+    await db.put(po, i.toString(), i.toString());
+    var value = await db.get(go, i.toString());
+    if (parseInt(value) !== i) {
+      console.log("${db}: readwrite: value = ${value}; want ${i}");
+    }
   }
 }
 
@@ -30,7 +33,7 @@ async function many_wo(db) {
 
   po = await leveldbWriteOptionsCreate();
   for (var i = 0; i < n; ++i) {
-    await db.put(po, i.toString(),i.toString());
+    await db.put(po, i.toString(), i.toString());
   }
 }
 
@@ -39,7 +42,10 @@ async function many_ro(db) {
 
   go = await leveldbReadOptionsCreate();
   for (var i = 0; i < n; ++i) {
-    await db.get(go, i.toString());
+    var value = await db.get(go, i.toString());
+    if (parseInt(value) !== i) {
+      console.log("${db}: readwrite: value = ${value}; want ${i}");
+    }
   }
 }
 
