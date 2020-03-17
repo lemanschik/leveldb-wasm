@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <stdio.h>
 
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
@@ -184,6 +185,8 @@ void leveldb_close(leveldb_t* db) {
 void leveldb_put(leveldb_t* db, const leveldb_writeoptions_t* options,
                  const char* key, size_t keylen, const char* val, size_t vallen,
                  char** errptr) {
+
+  //TODO: make work
   SaveError(errptr,
             db->rep->Put(options->rep, Slice(key, keylen), Slice(val, vallen)));
 }

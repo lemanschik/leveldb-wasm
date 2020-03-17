@@ -18,6 +18,7 @@ build/libleveldb.js: build/libleveldb.a build/api.js src/leveldb_worker.js src/b
 	-lnodefs.js \
 	--js-library ../emfs/library_chromefs.js \
 	--js-library ../emfs/library_nativeiofs.js \
+	-s USE_PTHREADS=1 \
 	--post-js build/api.js \
 	--post-js src/leveldb_worker.js \
 	--post-js src/benchmark.js
@@ -28,8 +29,19 @@ build/leveldb_client.js: src/leveldb_client.js build/libleveldb.js
 build/index.html: src/index.html build/leveldb_client.js
 	cp $< $@
 
+build/db_bench_client.js: src/db_bench_client.js build/libleveldb.js
+	cp $< $@
+
+build/db_bench.html: src/db_bench.html build/db_bench_client.js
+	cp $< $@
+
 run: build/index.html
 	emrun --no_browser $<
+
+.PHONY: run-bench
+run-bench: build/db_bench.html
+	emrun --no_browser $<
+
 
 clean:
 	rm -rf build/

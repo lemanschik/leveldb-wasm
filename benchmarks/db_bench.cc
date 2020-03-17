@@ -552,7 +552,6 @@ class Benchmark {
   void Run() {
     PrintHeader();
     Open();
-
     const char* benchmarks = FLAGS_benchmarks;
     while (benchmarks != nullptr) {
       const char* sep = strchr(benchmarks, ',');
@@ -653,6 +652,7 @@ class Benchmark {
       }
 
       if (fresh_db) {
+        printf("db_bench DoWrite using fresh_db\n");
         if (FLAGS_use_existing_db) {
           std::fprintf(stdout, "%-12s : skipped (--use_existing_db is true)\n",
                        name.ToString().c_str());
@@ -711,8 +711,10 @@ class Benchmark {
                     void (Benchmark::*method)(ThreadState*)) {
     SharedState shared(n);
 
+    printf("db_bench RunBenchmark name: %s\n", name.ToString().c_str());
     ThreadArg* arg = new ThreadArg[n];
     for (int i = 0; i < n; i++) {
+      printf("db_bench RunBenchmark creating thread n: %d\n", i);
       arg[i].bm = this;
       arg[i].method = method;
       arg[i].shared = &shared;
@@ -722,9 +724,13 @@ class Benchmark {
       // but reproducible when rerunning the same set of benchmarks.
       arg[i].thread = new ThreadState(i, /*seed=*/1000 + total_thread_count_);
       arg[i].thread->shared = &shared;
+      //TODO: debug StartThread, it leads to exeception
+      printf("db_bench RunBenchmark starting thread n: %d\n", i);
       g_env->StartThread(ThreadBody, &arg[i]);
+      printf("db_bench RunBenchmark created thread n: %d\n", i);
     }
 
+    printf("db_bench RunBenchmark started threads\n");
     shared.mu.Lock();
     while (shared.num_initialized < n) {
       shared.cv.Wait();
@@ -750,6 +756,7 @@ class Benchmark {
     for (int i = 0; i < n; i++) {
       delete arg[i].thread;
     }
+    printf("db_bench RunBenchmark deleted threads\n");
     delete[] arg;
   }
 
@@ -836,6 +843,7 @@ class Benchmark {
   void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
 
   void DoWrite(ThreadState* thread, bool seq) {
+    printf("db_bench DoWrite seq: %s\n", seq?"true":"false");
     if (num_ != FLAGS_num) {
       char msg[100];
       std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
@@ -1123,6 +1131,7 @@ int main(int argc, char** argv) {
     }
   }
 
+  printf("db_bench parsed flags\n");
   leveldb::g_env = leveldb::Env::Default();
 
   // Choose a location for the test database if none given with --db=<path>
