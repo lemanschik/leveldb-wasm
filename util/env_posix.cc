@@ -665,8 +665,17 @@ class PosixEnv : public Env {
 
   void StartThread(void (*thread_main)(void* thread_main_arg),
                    void* thread_main_arg) override {
-    std::thread new_thread(thread_main, thread_main_arg);
-    new_thread.detach();
+
+    printf("env_posix StartThread begin\n");
+    try {
+      std::thread new_thread(thread_main, thread_main_arg);
+      printf("env_posix StartThread done new\n");
+      new_thread.detach();
+      printf("env_posix StartThread done detach\n");
+    } catch(const std::exception& e) {
+      printf("env_posix StartThread new exception %s\n", e.what());
+      throw e;
+    }
   }
 
   Status GetTestDirectory(std::string* result) override {
